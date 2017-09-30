@@ -1,0 +1,30 @@
+---
+title: "README"
+author: "Connor Kirkpatrick"
+date: "5 June 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Design
+
+* Use Twitter API to search for `#Monzo` or `@Monzo` tweets.
+  * Need to register Twitter Application - Done
+  * Does an R Twitter library exist? - Done. Using TwitteR
+  * Potentially filter these for relevant ones? Need to define what I'm looking for exactly.
+    * For people who have tweet a question to Monzo, iterate through their tweets since to look for Happy or sad tweets relating to Monzo?
+* Apply sentiment analysis to these tweets
+  * R Sentiment anaylsis library.
+  * Tidy Text Mining could be helpful here?
+* Measure sentiment over a window eg Day, Week, Month.
+
+## Thoughts
+
+* Could be a novelty and not really give insight
+* Does the sentiment of a company vary hugely? ie Does Virgin Trains have better sentiment than South West Trains?
+
+
+

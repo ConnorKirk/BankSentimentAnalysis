@@ -1,0 +1,88 @@
+---
+title: "Sentiment Analysis of Tweets to Banks"
+output: html_notebook
+---
+
+```{r setup}
+
+library(tidyverse)
+library(stringr)
+library(twitteR)
+library(tidytext)
+
+source("credentials")
+
+#Authenticate with Twitter
+setup_twitter_oauth(consumer_key = consumer_key,
+                    consumer_secret = consumer_secret,
+                    access_token = access_token,
+                    access_secret = access_token_secret)
+```
+
+
+
+# Creating our function
+
+## What do I want to do?
+
+For each *bank* passed to the function, I want to:
+
+* Gather tweets to it (how many)?
+* Perform sentiment analysis on the gathered tweets
+* Create a calculation of proportion
+
+```{r}
+
+analyse_tweets <- function(bank) {
+  search_string <- paste("to:", bank, "+?", sep = "")
+  tweets <- searchTwitter(search_string, n = 200)
+
+# Convert to DF
+  tidy_tweets <- tweets %>%
+    twListToDF() %>% 
+    select(created, id, text) %>%
+    mutate(date = as.Date(created), bank = bank) %>%
+    unnest_tokens(word, text) %>%
+    anti_join(stop_words, by = c("word"))
+  
+  nrc_tidy_tweets <- tidy_tweets %>%
+  inner_join(get_sentiments(lexicon = "nrc"), by = c("word"))
+  
+  
+  nrc_tidy_tweets
+}
+
+```
+
+# What banks do we want to analyse?
+
+I'd like to compare the big 4 banks in the UK, along with some of the smaller more "customer friendly" banks.
+The larger banks often have multiple twitter handles for seperate (sometimes overlapping concerns). This muddies the waters our analysis a little, as people may tweet to different handles for different problems. 
+
+For example, HSBC has @HSBC, @HSBC_UK and @HSBCUKBusiness. Barclays have @Barclays, @BarclaysUK, @BarclaysUKHelp, @barclaysuknews, @BarclaysAccess and @BarclaysBizChat.
+
+Where they exist, I've taken the *customer service* twitter handle.
+
+```{r}
+banks <- c(HSBC = "HSBC_UK",
+           Barclays = "BarclaysUKHelp", 
+           Lloyds = "AskLloydsBank", 
+           RBS = "RBS_Help", 
+           First_Direct = "firstdirecthelp", 
+           Monzo = "monzo", 
+           Starling = "StarlingBank")
+```
+
+
+
+
+```{r}
+analyse_tweets("Monzo")
+analyse_tweets("HSBC_UK")
+
+words <- map_dfr(big_banks, ~{
+                              analyse_tweets(.x)
+                              Sys.sleep(60 * 15)
+                              })
+
+```
