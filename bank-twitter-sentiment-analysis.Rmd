@@ -52,6 +52,16 @@ analyse_tweets <- function(bank) {
   nrc_tidy_tweets
 }
 
+
+
+get_tweets <- function(bank) {
+  search_string <- paste("to:", bank, "+?", sep = "")
+  tweets <- searchTwitter(search_string, n = 200) %>%
+    twListToDF() %>% 
+    select(created, id, text) %>%
+    mutate(date = as.Date(created), bank = bank)
+}
+
 ```
 
 # What banks do we want to analyse?
@@ -71,18 +81,59 @@ banks <- c(HSBC = "HSBC_UK",
            First_Direct = "firstdirecthelp", 
            Monzo = "monzo", 
            Starling = "StarlingBank")
+
+
+tweets <- map_dfr(banks, get_tweets)
+
+# Use stop words from tidytext package
+# Add banks twitter handles to stop words list
+custom_stop_words <- bind_rows(data_frame(word = tolower(banks), 
+                                          lexicon = c("custom")), 
+                               stop_words)
+
+words <- tweets %>%
+  unnest_tokens(word, text) %>%
+  anti_join(custom_stop_words, by = c("word"))
+
 ```
 
 
+# Analysis
 
 
+### What are the most popular words?
 ```{r}
-analyse_tweets("Monzo")
-analyse_tweets("HSBC_UK")
 
-words <- map_dfr(big_banks, ~{
-                              analyse_tweets(.x)
-                              Sys.sleep(60 * 15)
-                              })
+words %>%
+  count(word) %>%
+  arrange(desc(n)) %>%
+  top_n(25) %>%
+  ggplot(aes(x = reorder(word, n), y = n)) + 
+  geom_bar(stat = "identity") + 
+  coord_flip() + 
+  labs(x = "Word", y = "Count", title = "Most popular words in tweets")
 
+```
+
+
+### Sentiment Analysis
+
+
+Need to be careful here.
+
+Some banks have more tweets than others, so proportion of each sentiment must be normalised to compare between banks
+```{r sentiment_analysis}
+sentiment_proportions <- words %>%
+  inner_join(get_sentiments("nrc"), by = "word") %>%
+  group_by(bank) %>%
+  mutate(total_n = n()) %>%
+  group_by(bank, sentiment) %>%
+  mutate(n = n(), sentiment_prop = (n/total_n) * 100 )
+
+
+sentiment_proportions %>%
+  ggplot(aes(x = sentiment, y = sentiment_prop)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  facet_wrap(~bank)
 ```
