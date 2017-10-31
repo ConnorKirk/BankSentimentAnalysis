@@ -8,10 +8,15 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+# What is this?
 
+This is a small toy project to scrape the twitter feeds of companies and perform sentiment analysis on what the customers are saying.
+
+[Check out the notebook here](http://htmlpreview.github.io/?https://github.com/ConnorKirk/BankSentimentAnalysis/blob/master/bank-twitter-sentiment-analysis.nb.html)
 # Design
 
-* Use Twitter API to search for `#Monzo` or `@Monzo` tweets.
+*
+* Eg Use Twitter API to search for `#Monzo` or `@Monzo` tweets.
   * Need to register Twitter Application - Done
   * Does an R Twitter library exist? - Done. Using TwitteR
   * Potentially filter these for relevant ones? Need to define what I'm looking for exactly.
